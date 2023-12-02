@@ -44,7 +44,7 @@ void loop() {
     delayMicroseconds(10);
     digitalWrite(TRIG_PIN, LOW);
   
-    long duration = pulseIn(ECHO_PIN, HIGH);
+    long duration = pulseIn(ECHO_PIN, HIGH);g
     int distance = duration * 0.034 / 2;
 
     if (distance < 24) {
@@ -54,6 +54,9 @@ void loop() {
         Serial.println(message);
         Blynk.virtualWrite(V4, "Chaplin está en el baño");
         Blynk.virtualWrite(V0, ledActivations);
+        if (ledActivations++ >= 7){
+          Blynk.virtualWrite(v1, "Debes limpiar la arena")
+        }
         ledWasOn = true;
       }
       digitalWrite(LED_PIN, HIGH);
