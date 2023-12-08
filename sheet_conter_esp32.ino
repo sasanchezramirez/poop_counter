@@ -2,8 +2,8 @@
 #include <WiFiUdp.h>
 #include <NTPClient.h>
 
-#define BLYNK_TEMPLATE_ID "TMPL2f4gzsWW6"
-#define BLYNK_TEMPLATE_NAME "Quickstart Device"
+#define BLYNK_TEMPLATE_ID "TMPL27MS3jDXE"
+#define BLYNK_TEMPLATE_NAME "ChaplinPoopManager"
 #define BLYNK_AUTH_TOKEN "SXcqI69IplTVrkhsw2106zkIF6OBu7Wn"
 
 #include <BlynkSimpleEsp32.h>
@@ -14,7 +14,7 @@ char pass[] = "uplo7821";
 #define TRIG_PIN 17 
 #define ECHO_PIN 16
 #define LED_PIN 2
-#define CLEAN_LED_PIN 18
+#define CLEAN_LED_PIN 26
 
 const unsigned long timeout = 3000000UL; // Por ejemplo, 1 segundo
 unsigned int ledActivations = 0; // Contador de activaciones del LED
