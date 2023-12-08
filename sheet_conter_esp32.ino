@@ -1,17 +1,20 @@
 #include <WiFi.h>
+#include <WiFiUdp.h>
+#include <NTPClient.h>
 
-#define BLYNK_TEMPLATE_ID "TMPL2f4gzsWW6"
-#define BLYNK_TEMPLATE_NAME "Quickstart Device"
+#define BLYNK_TEMPLATE_ID "TMPL27MS3jDXE"
+#define BLYNK_TEMPLATE_NAME "ChaplinPoopManager"
 #define BLYNK_AUTH_TOKEN "SXcqI69IplTVrkhsw2106zkIF6OBu7Wn"
 
 #include <BlynkSimpleEsp32.h>
 
-char ssid[] = "CERN";
-char pass[] = "Chepefortuna42";
+char ssid[] = "Santiago's Galaxy S22";
+char pass[] = "uplo7821";
 
 #define TRIG_PIN 17 
 #define ECHO_PIN 16
 #define LED_PIN 2
+#define CLEAN_LED_PIN 26
 
 const unsigned long timeout = 3000000UL; // Por ejemplo, 1 segundo
 unsigned int ledActivations = 0; // Contador de activaciones del LED
@@ -19,19 +22,38 @@ unsigned long previousMillis = 0; // Tiempo anterior para el muestreo
 const long sampleInterval = 5000; // Intervalo de muestreo en milisegundos (5 segundos)
 bool ledWasOn = false; // Estado anterior del LED
 
+WiFiUDP ntpUDP;
+NTPClient timeClient(ntpUDP, "pool.ntp.org", -18000, 60000); // GMT -5 para Bogotá, actualización cada 60 segundos
+
 void setup() {
   pinMode(TRIG_PIN, OUTPUT);
   pinMode(ECHO_PIN, INPUT);
   pinMode(LED_PIN, OUTPUT);
+  pinMode(CLEAN_LED_PIN, OUTPUT);
   Serial.begin(115200); // ESP32 suele funcionar bien con una velocidad mayor
 
-  Blynk.begin(BLYNK_AUTH_TOKEN, ssid, pass); // Cambio aquí
+  WiFi.begin(ssid, pass);
+  while (WiFi.status() != WL_CONNECTED) {
+    delay(500);
+    Serial.print(".");
+  }
+  Serial.println("WiFi connected");
 
+  timeClient.begin();
+
+  Blynk.begin(BLYNK_AUTH_TOKEN, ssid, pass); // Cambio aquí
 }
 
 void loop() {
-  
   Blynk.run();
+  timeClient.update();
+
+  int currentHour = timeClient.getHours();
+  int currentMinute = timeClient.getMinutes();
+
+  if (currentHour == 23 && currentMinute == 59) {
+    ledActivations = 0;
+  }
 
   unsigned long currentMillis = millis();
 
@@ -60,6 +82,13 @@ void loop() {
     } else {
       ledWasOn = false;
       digitalWrite(LED_PIN, LOW);
+    }
+
+    if (ledActivations >= 7){
+      digitalWrite(CLEAN_LED_PIN, HIGH); // Enciende el nuevo LED
+      Blynk.virtualWrite(V1, "Debes limpiar la arena");
+    } else {
+      digitalWrite(CLEAN_LED_PIN, LOW); // Asegúrate de apagar el LED cuando la condición ya no se cumpla
     }
   }
 }
