@@ -18,6 +18,7 @@ char pass[] = "Chepefortuna42";
 
 const unsigned long timeout = 3000000UL; // Por ejemplo, 1 segundo
 unsigned int ledActivations = 0; // Contador de activaciones del LED
+unsigned int activationsUntilCleaning = 0; // Contador de activaciones hasta la limpieza
 unsigned long previousMillis = 0; // Tiempo anterior para el muestreo
 const long sampleInterval = 5000; // Intervalo de muestreo en milisegundos (5 segundos)
 bool ledWasOn = false; // Estado anterior del LED
@@ -25,13 +26,13 @@ bool ledWasOn = false; // Estado anterior del LED
 WiFiUDP ntpUDP;
 NTPClient timeClient(ntpUDP, "pool.ntp.org", -18000, 60000); // GMT -5 para Bogotá, actualización cada 60 segundos
 
-BLYNK_WRITE(V2) { // Asegúrate de que V2 sea el pin virtual asignado a tu botón en la app Blynk
-    int buttonState = param.asInt(); // Obtiene el estado del botón (1 = presionado, 0 = no presionado)
-
+BLYNK_WRITE(V2) {
+    int buttonState = param.asInt();
     if (buttonState == 1) {
-        ledActivations = 0; // Resetea el contador
+        activationsUntilCleaning = 0; // Resetea el contador de limpieza
         Blynk.virtualWrite(V0, ledActivations); // Actualiza el valor en Blynk
-        Serial.println("ledActivations reseteado a 0");
+        Blynk.virtualWrite(V1, ""); // Limpia el mensaje en V1
+        Serial.println("activationsUntilCleaning reseteado a 0");
     }
 }
 void setup() {
@@ -81,6 +82,7 @@ void loop() {
     if (distance < 24) {
       if (!ledWasOn) {
         ledActivations++;
+        activationsUntilCleaning++;
         String message = "Chaplin está en el baño, ya van " + String(ledActivations) + " veces que ha ido al baño el día de hoy";
         Serial.println(message);
         Blynk.virtualWrite(V4, "Chaplin está en el baño");
@@ -92,12 +94,14 @@ void loop() {
       ledWasOn = false;
       digitalWrite(LED_PIN, LOW);
     }
-
-    if (ledActivations >= 7){
-      digitalWrite(CLEAN_LED_PIN, HIGH); // Enciende el nuevo LED
-      Blynk.virtualWrite(V1, "Debes limpiar la arena");
+    if (activationsUntilCleaning >= 7){
+        digitalWrite(CLEAN_LED_PIN, HIGH); // Enciende el nuevo LED
+        Blynk.virtualWrite(V1, "Debes limpiar la arena");
     } else {
-      digitalWrite(CLEAN_LED_PIN, LOW); // Asegúrate de apagar el LED cuando la condición ya no se cumpla
+        digitalWrite(CLEAN_LED_PIN, LOW); // Apaga el LED
+        if (activationsUntilCleaning == 0) {
+            Blynk.virtualWrite(V1, ""); // Limpia el mensaje si ledActivations es 0
+        }
     }
 
 
