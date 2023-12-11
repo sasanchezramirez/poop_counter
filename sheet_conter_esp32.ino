@@ -31,7 +31,7 @@ BLYNK_WRITE(V2) {
     if (buttonState == 1) {
         activationsUntilCleaning = 0; // Resetea el contador de limpieza
         Blynk.virtualWrite(V0, ledActivations); // Actualiza el valor en Blynk
-        Blynk.virtualWrite(V1, ""); // Limpia el mensaje en V1
+        Blynk.virtualWrite(V1, " "); // Limpia el mensaje en V1
         Serial.println("activationsUntilCleaning reseteado a 0");
     }
 }
@@ -100,7 +100,7 @@ void loop() {
     } else {
         digitalWrite(CLEAN_LED_PIN, LOW); // Apaga el LED
         if (activationsUntilCleaning == 0) {
-            Blynk.virtualWrite(V1, ""); // Limpia el mensaje si ledActivations es 0
+            Blynk.virtualWrite(V1, " "); // Limpia el mensaje si ledActivations es 0
         }
     }
 
