@@ -1,15 +1,10 @@
 #include <WiFi.h>
 #include <WiFiUdp.h>
 #include <NTPClient.h>
+#include <HTTPClient.h>
 
-#define BLYNK_TEMPLATE_ID "TMPL27MS3jDXE"
-#define BLYNK_TEMPLATE_NAME "ChaplinPoopManager"
-#define BLYNK_AUTH_TOKEN "pAGCGQ6EHvqQZP_rerp0cBfCF14cgy4F"
-
-#include <BlynkSimpleEsp32.h>
-
-char ssid[] = "CERN";
-char pass[] = "Chepefortuna42";
+char ssid[] = "URBANIA"; // Reemplaza con tu SSID
+char pass[] = "cafeconsciente"; // Reemplaza con tu contraseña de WiFi
 
 #define TRIG_PIN 17 
 #define ECHO_PIN 16
@@ -26,15 +21,6 @@ bool ledWasOn = false; // Estado anterior del LED
 WiFiUDP ntpUDP;
 NTPClient timeClient(ntpUDP, "pool.ntp.org", -18000, 60000); // GMT -5 para Bogotá, actualización cada 60 segundos
 
-BLYNK_WRITE(V2) {
-    int buttonState = param.asInt();
-    if (buttonState == 1) {
-        activationsUntilCleaning = 0; // Resetea el contador de limpieza
-        Blynk.virtualWrite(V0, ledActivations); // Actualiza el valor en Blynk
-        Blynk.virtualWrite(V1, " "); // Limpia el mensaje en V1
-        Serial.println("activationsUntilCleaning reseteado a 0");
-    }
-}
 void setup() {
   pinMode(TRIG_PIN, OUTPUT);
   pinMode(ECHO_PIN, INPUT);
@@ -50,12 +36,9 @@ void setup() {
   Serial.println("WiFi connected");
 
   timeClient.begin();
-
-  Blynk.begin(BLYNK_AUTH_TOKEN, ssid, pass); // Cambio aquí
 }
 
 void loop() {
-  Blynk.run();
   timeClient.update();
 
   int currentHour = timeClient.getHours();
@@ -85,8 +68,26 @@ void loop() {
         activationsUntilCleaning++;
         String message = "Chaplin está en el baño, ya van " + String(ledActivations) + " veces que ha ido al baño el día de hoy";
         Serial.println(message);
-        Blynk.virtualWrite(V4, "Chaplin está en el baño");
-        Blynk.virtualWrite(V0, ledActivations);
+        
+        // Enviar datos al backend
+        if (WiFi.status() == WL_CONNECTED) {
+          HTTPClient http;
+          http.begin("https://ffk76qrv-5000.use2.devtunnels.ms/data"); // Reemplaza con la dirección IP y puerto de tu servidor
+          http.addHeader("Content-Type", "application/json");
+          String httpRequestData = "{\"numero\":" + String(ledActivations) + ",\"mensaje\":\"" + message + "\"}";
+          int httpResponseCode = http.POST(httpRequestData);
+
+          if (httpResponseCode > 0) {
+            String response = http.getString();
+            Serial.println(httpResponseCode);
+            Serial.println(response);
+          } else {
+            Serial.print("Error en el envío: ");
+            Serial.println(httpResponseCode);
+          }
+          http.end();
+        }
+
         ledWasOn = true;
       }
       digitalWrite(LED_PIN, HIGH);
@@ -94,16 +95,11 @@ void loop() {
       ledWasOn = false;
       digitalWrite(LED_PIN, LOW);
     }
+
     if (activationsUntilCleaning >= 7){
         digitalWrite(CLEAN_LED_PIN, HIGH); // Enciende el nuevo LED
-        Blynk.virtualWrite(V1, "Debes limpiar la arena");
     } else {
         digitalWrite(CLEAN_LED_PIN, LOW); // Apaga el LED
-        if (activationsUntilCleaning == 0) {
-            Blynk.virtualWrite(V1, " "); // Limpia el mensaje si ledActivations es 0
-        }
     }
-
-
   }
 }
