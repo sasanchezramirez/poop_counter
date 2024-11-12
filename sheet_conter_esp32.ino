@@ -62,7 +62,7 @@ void loop() {
     long duration = pulseIn(ECHO_PIN, HIGH);
     int distance = duration * 0.034 / 2;
 
-    Serial.println("Preparado para recibir a chaplin");
+    Serial.println("Preparado para recibir a Chaplin");
 
     if (distance < 24) {
       if (!ledWasOn) {
@@ -74,10 +74,10 @@ void loop() {
         // Enviar datos al backend
         if (WiFi.status() == WL_CONNECTED) {
           HTTPClient http;
-          http.begin("https://zxtm0976-8000.use2.devtunnels.ms/poop-times"); // Reemplaza con la dirección IP y puerto de tu servidor
+          http.begin("https://7rcszg76-8000.brs.devtunnels.ms/poop/new-poop"); // Reemplaza con la dirección IP y puerto de tu servidor
           http.addHeader("Content-Type", "application/json");
-          String httpRequestData = "{\"numero\":" + String(ledActivations) + ",\"mensaje\":\"" + message + "\"}";
-          int httpResponseCode = http.GET();
+          String httpRequestData = "{\"pet_id\": 1}";
+          int httpResponseCode = http.POST(httpRequestData);
 
           if (httpResponseCode > 0) {
             String response = http.getString();
