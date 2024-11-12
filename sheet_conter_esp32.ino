@@ -3,8 +3,8 @@
 #include <NTPClient.h>
 #include <HTTPClient.h>
 
-char ssid[] = "URBANIA"; // Reemplaza con tu SSID
-char pass[] = "cafeconsciente"; // Reemplaza con tu contraseña de WiFi
+char ssid[] = "S24 Ultra de Santiago"; // Reemplaza con tu SSID
+char pass[] = "leomessi10"; // Reemplaza con tu contraseña de WiFi
 
 #define TRIG_PIN 17 
 #define ECHO_PIN 16
@@ -62,6 +62,8 @@ void loop() {
     long duration = pulseIn(ECHO_PIN, HIGH);
     int distance = duration * 0.034 / 2;
 
+    Serial.println("Preparado para recibir a Chaplin");
+
     if (distance < 24) {
       if (!ledWasOn) {
         ledActivations++;
@@ -72,9 +74,9 @@ void loop() {
         // Enviar datos al backend
         if (WiFi.status() == WL_CONNECTED) {
           HTTPClient http;
-          http.begin("https://ffk76qrv-5000.use2.devtunnels.ms/data"); // Reemplaza con la dirección IP y puerto de tu servidor
+          http.begin("https://7rcszg76-8000.brs.devtunnels.ms/poop/new-poop"); // Reemplaza con la dirección IP y puerto de tu servidor
           http.addHeader("Content-Type", "application/json");
-          String httpRequestData = "{\"numero\":" + String(ledActivations) + ",\"mensaje\":\"" + message + "\"}";
+          String httpRequestData = "{\"pet_id\": 1}";
           int httpResponseCode = http.POST(httpRequestData);
 
           if (httpResponseCode > 0) {
